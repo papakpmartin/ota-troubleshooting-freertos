@@ -1,9 +1,3 @@
-//-----------------------------------------------------------------------
-//  Comms.hpp
-//
-//  Created by Ken Martin on 2023-01-25
-//  Copyright © 2023 Sonny's Holdings. All rights reserved.
-//
 
 //===[ Include only once ]===============================================
 #if !defined(Comms_HPP)
