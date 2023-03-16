@@ -14,10 +14,10 @@
 TwoWire I2C_MAIN = TwoWire(0);
 TwoWire I2C_EXT = TwoWire(1);
 
-#define MUTEX_PERMIT_TO_EXIT 1
+#define MUTEX_PERMIT_TO_EXIST 1
 #define MUTEX_USE 1 // enabling this will make OTA updates fail most of the time
 
-#ifdef MUTEX_PERMIT_TO_EXIT
+#ifdef MUTEX_PERMIT_TO_EXIST
 SemaphoreHandle_t mutex_i2c = NULL;
 #endif
 
@@ -83,7 +83,7 @@ void setup() {
   I2C_EXT.begin(); 
   Serial.println("I2C_EXT: Setup complete");
 
-#ifdef MUTEX_PERMIT_TO_EXIT
+#ifdef MUTEX_PERMIT_TO_EXIST
   mutex_i2c = xSemaphoreCreateMutex();
   if (mutex_i2c == NULL) { 
     Serial.println("Mutex can not be created"); 
