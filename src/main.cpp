@@ -7,7 +7,8 @@
 
 
 #define MUTEX_PERMIT_TO_EXIST 1
-// #define MUTEX_USE 1 // enabling this will make OTA updates fail most of the time
+#define MUTEX_USE_OUTSIDE_OF_COMMS 1
+// #define MUTEX_USE_INSIDE_OF_COMMS 1 // enabling this will make OTA updates fail most of the time
 
 #ifdef MUTEX_PERMIT_TO_EXIST
 SemaphoreHandle_t mutex_i2c = NULL;
@@ -20,14 +21,14 @@ void task__handleComms(void * parameters) {
 
     Serial.println("WIFI: About to connect");
     Comms::instance().wifi_connect();
-        
-#ifdef MUTEX_USE
+
+#ifdef MUTEX_USE_INSIDE_OF_COMMS
     xSemaphoreTake(mutex_i2c, portMAX_DELAY);
 #endif
 
     Comms::instance().ota_perform_update();
 
-#ifdef MUTEX_USE
+#ifdef MUTEX_USE_INSIDE_OF_COMMS
     xSemaphoreGive(mutex_i2c);
 #endif
 
@@ -37,6 +38,27 @@ void task__handleComms(void * parameters) {
   }
 }
 
+
+
+TaskHandle_t taskHandle__heartbeatLogging = NULL;
+void task__heartbeatLogging(void * parameters) {
+  for (;;) {
+        
+#ifdef MUTEX_USE_OUTSIDE_OF_COMMS
+    xSemaphoreTake(mutex_i2c, portMAX_DELAY);
+#endif
+
+    Serial.print("HEARTBEAT: ");
+    Serial.println( millis() );
+
+#ifdef MUTEX_USE_OUTSIDE_OF_COMMS
+    xSemaphoreGive(mutex_i2c);
+#endif
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+  }
+}
 
 
 void setup() {
@@ -62,6 +84,16 @@ void setup() {
     CONFIG_ARDUINO_RUNNING_CORE      // Wi-Fi tasks must run on same core and Arduino
   );
   Serial.println("COMMS: task__handleComms created");
+
+  xTaskCreate(
+    task__heartbeatLogging,
+    "task__heartbeatLogging",
+    1000,                            // stack size… how to calculate this?
+    NULL,                            // parameters
+    1,                               // priority, higher number is higher priority
+    &taskHandle__heartbeatLogging    // task handle, which would need to be global scope
+  );
+  Serial.println("HEARTBEAT: task__handleComms created");
 
 }
 
